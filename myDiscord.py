@@ -5,9 +5,10 @@ import psycopg2
 import urllib.parse as urlparse
 from dotenv import load_dotenv
 
+
 load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-SERVER_ID = os.getenv("SERVER_ID")
+SERVER_ID = int(os.getenv("SERVER_ID"))
 SERVER_NAME = "server"
 intents = discord.Intents.all()
 bunker = dict()  # hold incomplete details
@@ -36,13 +37,14 @@ def database_search_register(memberID):
 
         query = f"SELECT id FROM discord_list WHERE id='{str(memberID)}'"
         cursor.execute(query)
-        status = len(cursor.fetchall()) > 0
+        status = cursor.rowcount > 0
         cursor.close()
     except Exception as error:
         print('discord_list search:error :: {}'.format(error))
     finally:
         if con is not None:
             con.close()
+            print('discord_list search status', status)
             return status
 
 
@@ -89,6 +91,7 @@ def database_add(Dmember):
     finally:
         if con is not None:
             con.close()
+            print('discord_list insert status', status)
             return status
 
 
@@ -109,12 +112,14 @@ def database_is_GCEKian(Dmember):
                                password=password, host=host, port=port)
         cursor = con.cursor()
 
-        query = f"SELECT (name,branch,year) FROM gcek_list \
+        query = f"SELECT name,branch,year FROM gcek_list \
         WHERE admn='{str(Dmember.admission).upper()}'"
         cursor.execute(query)
 
         record = cursor.fetchone()
-        if str(record[1]).upper().strip() == Dmember.branch.strip().upper():
+        if len(record) != 0:
+            status = True
+        if status and str(record[1]).upper().strip() == Dmember.branch.strip().upper():
             if str(record[2]).upper().strip() == Dmember.batch.strip().upper():
                 # compare name
                 seq = difflib.SequenceMatcher(None, str(record[0]).strip().upper(),
@@ -122,12 +127,17 @@ def database_is_GCEKian(Dmember):
                 status = float(seq.ratio()) > 0.8
                 if status:
                     Dmember.name = str(record[0]).strip().title()
+            else:
+                status = False
+        else:
+            status = False
         cursor.close()
     except Exception as error:
-        print('discord_list search:error :: {}'.format(error))
+        print('gcek_list search:error :: {}'.format(error))
     finally:
         if con is not None:
             con.close()
+            print(f'gcek_list search status', status)
             return status
 
 
@@ -154,10 +164,11 @@ def database_remove(memberID):
         cursor.close()
         status = True
     except Exception as error:
-        print('discord_list insert:error :: {}'.format(error))
+        print('discord_list remove:error :: {}'.format(error))
     finally:
         if con is not None:
             con.close()
+            print('discord_list remove status', status)
             return status
 
 
@@ -207,7 +218,7 @@ class DiscordMember:
     async def plugin(self):
         guild = discord.utils.get(client.guilds, id=SERVER_ID)
         for member in guild.members:
-            if member.id == self.id:
+            if str(member.id) == str(self.id):
                 await member.edit(nick=(self.name+" 🎓"))
 
                 role = discord.utils.get(guild.roles, name="un-verified")
@@ -242,7 +253,7 @@ class DiscordMember:
 
         elif next == "name":
             msg = """Enter your official name using the command #name
-                eg      #name This is my Name"""
+                eg      #name 'This is my Name'"""
 
         elif next == "GCEK":
             msg = """Are you a student at GCE Kannur?
@@ -310,6 +321,7 @@ class MyClient(discord.Client):
             return None
 
         thisMember = memberInstance(message.author.id)
+        print(message.author, ":", message.content)
 
         if str(message.content).strip() == "#register":
             if not(self.has_role('un-verified', message.author.id)):
@@ -352,14 +364,16 @@ class MyClient(discord.Client):
         elif str(message.content) == "#connect":
             if thisMember.fetchNext() == "complete":
                 try:
-                    if thisMember.valid() and (await thisMember.plugin()) and database_add(thisMember):
+                    if database_search_register(str(thisMember.id)):
+                        await message.channel.send(f"Ops! It seems you have already been in {SERVER_NAME}. Try contacting the server admins for more info...")
+                    elif (await thisMember.plugin()) and database_add(thisMember):
                         await message.channel.send(f"Lets rock and roll the server! See you at {SERVER_NAME}")
                     else:
                         await thisMember.unplug()
                         database_remove(thisMember.id)
                         await message.channel.send("Ops! something went wrong... have you entered correct details? lets try once more... issue the command #register to get started")
                 except Exception as e:
-                    print(e)
+                    print("something went wrong! ", e)
                 finally:
                     del bunker[str(message.author.id)]
                     return None
@@ -370,7 +384,6 @@ class MyClient(discord.Client):
             return None
 
         await message.channel.send(thisMember.generateMessage())
-        print(message.author, ":", message.content)
 
     async def on_member_join(self, member):
         guild = discord.utils.get(self.guilds, id=SERVER_ID)
@@ -385,16 +398,11 @@ class MyClient(discord.Client):
 
     async def on_member_remove(self, member):
         database_remove(member.id)
-        if self.has_role("un-verified", member.id):
-            return None
-
-        dm = await member.create_dm()
-        await dm.send(f"Sorry to see you leave {SERVER_NAME}")
 
     def has_role(self, role_name, member_id):
         guild = discord.utils.get(self.guilds, id=SERVER_ID)
         for member in guild.members:
-            if member.id == member.id:
+            if member.id == int(member_id):
                 for role in member.roles:
                     if role.name == role_name:
                         return True
