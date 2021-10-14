@@ -1,7 +1,8 @@
 import os
 import discord
 import difflib
-import pandas as pd
+import psycopg2
+import urllib.parse as urlparse
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,65 +19,146 @@ def memberInstance(id):
     return bunker[str(id)]
 
 
+def database_search_register(memberID):
+    # searches the Discord Register for id, if found return True, else False
+    con = None
+    status = False
+    try:
+        url = urlparse.urlparse(os.environ['DATABASE_URL'])
+        dbname = url.path[1:]
+        user = url.username
+        password = url.password
+        host = url.hostname
+        port = url.port
+        con = psycopg2.connect(dbname=dbname, user=user,
+                               password=password, host=host, port=port)
+        cursor = con.cursor()
+
+        query = f"SELECT id FROM discord_list WHERE id='{str(memberID)}'"
+        cursor.execute(query)
+        status = len(cursor.fetchall()) > 0
+        cursor.close()
+    except Exception as error:
+        print('discord_list search:error :: {}'.format(error))
+    finally:
+        if con is not None:
+            con.close()
+            return status
+
+
 def database_add(Dmember):
     # add new record or update existing record in Discord Register list
     if not Dmember.valid():
         return False
 
-    data = pd.read_excel('discordList.xlsx')
-    if len(data[data['ID'].str.upper() == str(Dmember.id)]) == 1:
-        # data already present
-        # TODO: Update routine
-        return True
+    con = None
+    status = False
+    try:
+        url = urlparse.urlparse(os.environ['DATABASE_URL'])
+        dbname = url.path[1:]
+        user = url.username
+        password = url.password
+        host = url.hostname
+        port = url.port
+        con = psycopg2.connect(dbname=dbname, user=user,
+                               password=password, host=host, port=port)
+        cursor = con.cursor()
 
-    gcekinfo = ""
-    if not Dmember.GCEKian:
-        gcekinfo = "False"
-    else:
-        gcekinfo = f"{Dmember.branch} {Dmember.batch}"
+        # Add new entry
+        id = str(Dmember.id)
+        name = Dmember.name.title()
+        if Dmember.GCEKian:
+            gcekian = str(Dmember.admission)
+        else:
+            gcekian = "False"
 
-    newData = {'ID': Dmember.id, 'Dname': Dmember.name, 'Class': gcekinfo}
-    data = data.append(newData, ignore_index=True)
-    data.to_excel('discordList.xlsx', index=False)
-    return True
+        if database_search_register(Dmember.id):
+            query = f"UPDATE discord_list \
+            SET name='{name}', gcekian='{gcekian}'\
+            WHERE id='{id}'"
+        else:
+            query = f"INSERT INTO discord_list (id, name, gcekian) \
+        VALUES ('{id}', '{name}', '{gcekian}')"
 
-
-def database_search_register(memberID):
-    # searches the Discord Register for id, if found return the row, else FALSE
-    pass
+        cursor.execute(query)
+        con.commit()
+        cursor.close()
+        status = True
+    except Exception as error:
+        print('discord_list insert:error :: {}'.format(error))
+    finally:
+        if con is not None:
+            con.close()
+            return status
 
 
 def database_is_GCEKian(Dmember):
     # Checks if the member is a GCEKian or not. Look and maps GCEK list
     # if match found, update name and return True, else False
 
-    data = pd.read_excel('GCEKList.xlsx', sheet_name=Dmember.branch)
-    data = data[data['admission'].str.upper() == Dmember.admission.upper()]
+    con = None
+    status = False
+    try:
+        url = urlparse.urlparse(os.environ['DATABASE_URL'])
+        dbname = url.path[1:]
+        user = url.username
+        password = url.password
+        host = url.hostname
+        port = url.port
+        con = psycopg2.connect(dbname=dbname, user=user,
+                               password=password, host=host, port=port)
+        cursor = con.cursor()
 
-    # map branch and year
-    search = f"{Dmember.branch} {Dmember.batch}".upper()
-    if Dmember.branch == "EC":
-        data = data[(data['Class'].str.upper() == (search+"A"))
-                    | (data['Class'].str.upper() == (search+"B"))]
-    else:
-        data = data[data['Class'].str.upper() == search]
+        query = f"SELECT (name,branch,year) FROM gcek_list \
+        WHERE admn='{str(Dmember.admission).upper()}'"
+        cursor.execute(query)
 
-    data = data[data['Class'].str.upper() == search.upper()]
-
-    if len(data) != 1:
-        return False
-
-    # compare name
-    seq = difflib.SequenceMatcher(None, data['Name'].str.upper().item(),
-                                  Dmember.name.upper())
-    similar = float(seq.ratio()) > 0.8
-    if similar:
-        Dmember.name = str(data['Name'].str.upper().item()).title()
-    return similar
+        record = cursor.fetchone()
+        if str(record[1]).upper().strip() == Dmember.branch.strip().upper():
+            if str(record[2]).upper().strip() == Dmember.batch.strip().upper():
+                # compare name
+                seq = difflib.SequenceMatcher(None, str(record[0]).strip().upper(),
+                                              Dmember.name.strip().upper())
+                status = float(seq.ratio()) > 0.8
+                if status:
+                    Dmember.name = str(record[0]).strip().title()
+        cursor.close()
+    except Exception as error:
+        print('discord_list search:error :: {}'.format(error))
+    finally:
+        if con is not None:
+            con.close()
+            return status
 
 
 def database_remove(memberID):
-    pass
+    con = None
+    status = False
+    try:
+        url = urlparse.urlparse(os.environ['DATABASE_URL'])
+        dbname = url.path[1:]
+        user = url.username
+        password = url.password
+        host = url.hostname
+        port = url.port
+        con = psycopg2.connect(dbname=dbname, user=user,
+                               password=password, host=host, port=port)
+        cursor = con.cursor()
+
+        # Add new entry
+        id = str(memberID)
+        query = f"DELETE FROM discord_list WHERE id='{id}'"
+
+        cursor.execute(query)
+        con.commit()
+        cursor.close()
+        status = True
+    except Exception as error:
+        print('discord_list insert:error :: {}'.format(error))
+    finally:
+        if con is not None:
+            con.close()
+            return status
 
 
 class DiscordMember:
