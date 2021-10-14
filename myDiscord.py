@@ -20,8 +20,8 @@ def memberInstance(id):
     return bunker[str(id)]
 
 
-def database_search_register(memberID):
-    # searches the Discord Register for id, if found return True, else False
+def database_search_register(key, value):
+    # searches the Discord Register for key, if found return True, else False
     con = None
     status = False
     try:
@@ -35,7 +35,7 @@ def database_search_register(memberID):
                                password=password, host=host, port=port)
         cursor = con.cursor()
 
-        query = f"SELECT id FROM discord_list WHERE id='{str(memberID)}'"
+        query = f"SELECT id FROM discord_list WHERE {key}='{str(value)}'"
         cursor.execute(query)
         status = cursor.rowcount > 0
         cursor.close()
@@ -50,9 +50,6 @@ def database_search_register(memberID):
 
 def database_add(Dmember):
     # add new record or update existing record in Discord Register list
-    if not Dmember.valid():
-        return False
-
     con = None
     status = False
     try:
@@ -74,7 +71,7 @@ def database_add(Dmember):
         else:
             gcekian = "False"
 
-        if database_search_register(Dmember.id):
+        if database_search_register("id", Dmember.id):
             query = f"UPDATE discord_list \
             SET name='{name}', gcekian='{gcekian}'\
             WHERE id='{id}'"
@@ -235,8 +232,6 @@ class DiscordMember:
         guild = discord.utils.get(client.guilds, id=SERVER_ID)
         for member in guild.members:
             if member.id == self.id:
-                await member.edit(nick=(self.name))
-
                 role = discord.utils.get(guild.roles, name="un-verified")
                 await member.add_roles(role)
                 if self.GCEKian:
@@ -364,10 +359,15 @@ class MyClient(discord.Client):
         elif str(message.content) == "#connect":
             if thisMember.fetchNext() == "complete":
                 try:
-                    if database_search_register(str(thisMember.id)):
+                    if database_search_register("id", str(thisMember.id)) or database_search_register("gcekian", str(thisMember.admission).upper()):
                         await message.channel.send(f"Ops! It seems you have already been in {SERVER_NAME}. Try contacting the server admins for more info...")
-                    elif (await thisMember.plugin()) and database_add(thisMember):
-                        await message.channel.send(f"Lets rock and roll the server! See you at {SERVER_NAME}")
+                    elif thisMember.valid() and database_add(thisMember):
+                        print("plugging in...")
+                        if (await thisMember.plugin()):
+                            await message.channel.send(f"Lets rock and roll the server! See you at {SERVER_NAME}")
+                        else:
+                            await thisMember.unplug()
+                            database_remove(thisMember.id)
                     else:
                         await thisMember.unplug()
                         database_remove(thisMember.id)
