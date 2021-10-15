@@ -1,8 +1,4 @@
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-SERVER_NAME = os.getenv('SERVER_NAME', '')
+from settings import SERVER_NAME
 
 
 class DiscordMember:
