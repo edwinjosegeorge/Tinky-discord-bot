@@ -4,7 +4,7 @@ import psycopg2
 import traceback
 import urllib.parse as urlparse
 from dotenv import load_dotenv
-from myDiscord import DiscordMember
+from memberProp import DiscordMember
 
 
 class DataBunker:
@@ -166,7 +166,7 @@ class DataBunker:
             cursor = conn.cursor()
 
             query = "SELECT name,branch,year FROM gcek_list "
-            query += f"WHERE admn='{Dmember.admission.upper()}'"
+            query += f"WHERE admn='{Dmember.admn.upper()}'"
 
             print("running ", query)
 
@@ -179,10 +179,10 @@ class DataBunker:
 
             print("record is ", record)
             name = str(record[0][0]).upper().strip()
-            batch = str(record[0][1]).upper().strip()
+            branch = str(record[0][1]).upper().strip()
             year = str(record[0][2]).upper().strip()
 
-            if batch == Dmember.branch and year == Dmember.batch:
+            if branch == Dmember.branch and year == Dmember.year:
                 # comparing name
                 seq = difflib.SequenceMatcher(None, name,
                                               Dmember.name.strip().upper())
