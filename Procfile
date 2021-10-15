@@ -1,1 +1,1 @@
-worker: python3 myDiscord.py
+worker: python3 tinky.py

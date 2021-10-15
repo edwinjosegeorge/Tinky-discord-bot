@@ -47,7 +47,7 @@ class MyClient(discord.Client):
             return None
 
         thisMember = loadMember(message.author.id)
-        print(message.author, ":", message.content)
+        # print(message.author, ":", message.content)
 
         content = str(message.content).strip()
         reply = ""
