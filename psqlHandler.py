@@ -1,8 +1,7 @@
-import os
 import difflib
 import psycopg2
 import urllib.parse as urlparse
-from dotenv import load_dotenv
+from settings import DATABASE_URL
 from memberProp import DiscordMember
 
 
@@ -11,8 +10,7 @@ class DataBunker:
         self.loadURL()
 
     def loadURL(self):
-        load_dotenv()
-        url = urlparse.urlparse(os.environ['DATABASE_URL'])
+        url = urlparse.urlparse(DATABASE_URL)
         self.dbname = url.path[1:]
         self.user = url.username
         self.password = url.password

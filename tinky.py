@@ -2,12 +2,8 @@ import os
 import discord
 from memberProp import loadMember, delMember
 from psqlHandler import DataBunker
-from dotenv import load_dotenv
+from settings import SERVER_NAME, BOT_TOKEN, SERVER_ID
 
-load_dotenv()
-BOT_TOKEN = os.getenv('BOT_TOKEN')
-SERVER_ID = int(os.getenv("SERVER_ID"))
-SERVER_NAME = os.getenv('SERVER_NAME')
 intents = discord.Intents.all()
 
 
