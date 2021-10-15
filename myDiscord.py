@@ -411,4 +411,5 @@ class MyClient(discord.Client):
 
 
 client = MyClient(intents=intents)
-client.run(BOT_TOKEN)
+if __name__ == "__main__":
+    client.run(BOT_TOKEN)

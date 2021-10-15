@@ -2,9 +2,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-SERVER_NAME = os.getenv('SERVER_NAME')
-if SERVER_NAME is None:
-    SERVER_NAME = ""
+SERVER_NAME = os.getenv('SERVER_NAME', '')
 
 
 class DiscordMember:
@@ -87,7 +85,7 @@ class DiscordMember:
                     accept = False
             return accept
 
-        elif next == 'batch':
+        elif next == 'branch':
             if info in {'CE', 'CS', 'EC', 'EE', 'ME'}:
                 self.branch = info
                 return True
@@ -137,7 +135,12 @@ class DiscordMember:
 bunker = dict()  # hold incomplete details
 
 
-def memberInstance(id) -> DiscordMember:
+def loadMember(id) -> DiscordMember:
     # Returns an existing or new object for DiscordMember
     bunker[str(id)] = bunker.get(str(id), DiscordMember(str(id)))
     return bunker[str(id)]
+
+
+def delMember(id) -> None:
+    bunker[str(id)] = bunker.get(str(id), DiscordMember(str(id)))
+    del bunker[str(id)]
