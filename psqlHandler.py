@@ -7,9 +7,6 @@ from memberProp import DiscordMember
 
 class DataBunker:
     def __init__(self):
-        self.loadURL()
-
-    def loadURL(self):
         url = urlparse.urlparse(DATABASE_URL)
         self.dbname = url.path[1:]
         self.user = url.username
@@ -25,7 +22,6 @@ class DataBunker:
         for key in param:
             param[key] = str(param[key]).upper().strip()
         try:
-            self.loadURL()
             conn = psycopg2.connect(dbname=self.dbname, user=self.user,
                                     password=self.password, host=self.host,
                                     port=self.port)
@@ -37,6 +33,7 @@ class DataBunker:
             cursor.execute(query)
             status = cursor.rowcount > 0
             cursor.close()
+
         except Exception as error:
             print(f'database {table} search error', error)
         finally:
@@ -52,7 +49,6 @@ class DataBunker:
         for key in param:
             param[key] = str(param[key]).upper().strip()
         try:
-            self.loadURL()
             conn = psycopg2.connect(dbname=self.dbname, user=self.user,
                                     password=self.password, host=self.host,
                                     port=self.port)
@@ -83,7 +79,6 @@ class DataBunker:
         for key in oldparam:
             oldparam[key] = str(oldparam[key]).upper().strip()
         try:
-            self.loadURL()
             conn = psycopg2.connect(dbname=self.dbname, user=self.user,
                                     password=self.password, host=self.host,
                                     port=self.port)
@@ -98,6 +93,7 @@ class DataBunker:
             conn.commit()
             status = cursor.rowcount > 0
             cursor.close()
+
         except Exception as error:
             print(f'database {table} update error', error)
         finally:
@@ -114,7 +110,6 @@ class DataBunker:
         for key in param:
             param[key] = str(param[key]).upper().strip()
         try:
-            self.loadURL()
             conn = psycopg2.connect(dbname=self.dbname, user=self.user,
                                     password=self.password, host=self.host,
                                     port=self.port)
@@ -144,7 +139,6 @@ class DataBunker:
         conn = None
         status = False
         try:
-            self.loadURL()
             conn = psycopg2.connect(dbname=self.dbname, user=self.user,
                                     password=self.password, host=self.host,
                                     port=self.port)

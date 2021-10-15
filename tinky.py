@@ -1,4 +1,3 @@
-import os
 import discord
 from memberProp import loadMember, delMember
 from psqlHandler import DataBunker
@@ -17,9 +16,7 @@ class MyClient(discord.Client):
         print(f'Logged on as {self.user}')
         guild = discord.utils.get(client.guilds, id=SERVER_ID)
 
-        SERVER_NAME = str(guild.name)
-        os.environ["SERVER_NAME"] = SERVER_NAME
-        print(f'{self.user} is connected to {SERVER_NAME}(id: {SERVER_ID})\n')
+        print(f'{self.user} is connected to {guild.name}(id: {guild.id})')
 
         # send message to unverified
         role = discord.utils.get(guild.roles, name="un-verified")
@@ -127,6 +124,8 @@ class MyClient(discord.Client):
         await message.channel.send(reply)
 
     async def on_member_join(self, member):
+        # trigger when someone new joins!
+
         guild = discord.utils.get(self.guilds, id=SERVER_ID)
         role = discord.utils.get(guild.roles, name="un-verified")
         await member.add_roles(role)
@@ -185,4 +184,5 @@ class MyClient(discord.Client):
 
 client = MyClient(intents=intents)
 if __name__ == "__main__":
+    client.run(BOT_TOKEN)
     client.run(BOT_TOKEN)

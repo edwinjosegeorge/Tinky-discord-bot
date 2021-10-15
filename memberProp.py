@@ -3,12 +3,12 @@ from settings import SERVER_NAME
 
 class DiscordMember:
     def __init__(self, id):
-        self.name = None       # string
-        self.id = str(id)      # str(discord id)
-        self.gcekian = None    # True/False
-        self.year = None      # 2K20 2K19 2K18
-        self.branch = None     # CS ME CE EE EC
-        self.admn = None  # 18B123
+        self.name = None
+        self.id = str(id)
+        self.gcekian = None
+        self.year = None
+        self.branch = None
+        self.admn = None
         self.registerStart = False
 
     def fetchNext(self) -> str:
