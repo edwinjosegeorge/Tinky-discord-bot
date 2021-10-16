@@ -5,23 +5,22 @@ This custom discord-python bot assigns roles to members joined at discord server
 ## Setting up the bot
 1. Clone this repo
    ```shell
-   $ git clone https://github.com/edwinjosegeorge/Tinky-discord-bot.git
-   $ cd Tinky-discord-bot
+   git clone https://github.com/edwinjosegeorge/Tinky-discord-bot.git
+   cd Tinky-discord-bot
    ```
 2. Create virtual environment (optional)
-  ```bash
-  $ python3 -m pip install --user virtualenv
-  $ python3 -m venv myBotEnv
-  $ source myBotEnv/bin/activate
-  ```
+   ```bash
+   python3 -m pip install --user virtualenv
+   python3 -m venv myBotEnv
+   source myBotEnv/bin/activate
+   ```
 3. Install libraries
-  ```bash
-  $ pip install -r requirements.txt
-  ```
+   ```bash
+   pip install -r requirements.txt
+   ```
 4. Setup the config variables
-
-  1.  Set up system variables (recommended)
-
+   
+   i.  Set up system variables (recommended)
     Create a file `.env` and add tokens. Replace `' ... '` with
     relevant info.
     ```shell
@@ -30,23 +29,22 @@ This custom discord-python bot assigns roles to members joined at discord server
     BOT_TOKEN='token of your bot'
     DATABASE_URL='cloud database url'
     ```
-  2. Update settings.py file (not recommended)
-
+   ii. Update settings.py file (not recommended)
     Update [settings.py](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/settings.py) to the following
+    
     ```python
     SERVER_ID=int('the id of server')
     SERVER_NAME=str('name of server')
     BOT_TOKEN=str('token of your bot')
     DATABASE_URL=str('cloud database url')
     ```
+    
+   Config variables can be fetched from your deployment environment. To obtain bot config, visit Discord.py developers portal
 
-  Config variables can be fetched from your deployment environment. To obtain bot config, visit Discord.py developers portal
-
-5. Update and suite the DataBase constraints by modifying [`psqlHandler.py`](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/psqlHandler.py) where necessary.
-
-  Take care to modify the code to suite your roles and constraints. currently the bot will send a message to all un-verified members to start registration.
+5. Update and suite the DataBase constraints by modifying [`psqlHandler.py`](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/psqlHandler.py) where necessary.  
+   Take care to modify the code to suite your roles and constraints. currently the bot will send a message to all un-verified members to start registration.
 
 6. Run you bot
-```bash
-$ python3 tinky.py
-```
+   ```bash
+   python3 tinky.py
+   ```
