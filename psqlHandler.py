@@ -39,7 +39,7 @@ class DataBunker:
         finally:
             if conn is not None:
                 conn.close()
-                # print(f'database search on {table} is', status)
+                print(f'database search on {table} is', status)
             return status
 
     def add(self, table: str, param: dict) -> bool:
@@ -67,7 +67,7 @@ class DataBunker:
         finally:
             if conn is not None:
                 conn.close()
-                # print(f'database add on {table} is', status)
+                print(f'database add on {table} is', status)
             return status
 
     def update(self, table: str, oldparam: dict, newparam: dict) -> bool:
@@ -99,7 +99,7 @@ class DataBunker:
         finally:
             if conn is not None:
                 conn.close()
-                # print(f'database update on {table} is', status)
+                print(f'database update on {table} is', status)
             return status
 
     def remove(self, table: str, param: dict, op="AND") -> bool:
@@ -127,7 +127,7 @@ class DataBunker:
         finally:
             if conn is not None:
                 conn.close()
-                # print(f'database delete on {table} is', status)
+                print(f'database delete on {table} is', status)
             return status
 
     def check_gcekian(self, Dmember: DiscordMember) -> bool:
@@ -171,5 +171,5 @@ class DataBunker:
         finally:
             if conn is not None:
                 conn.close()
-                # print('check_gcekian status is ', status)
+                print('check_gcekian status is ', status)
             return status
