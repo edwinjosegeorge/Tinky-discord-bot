@@ -29,9 +29,8 @@ class MyClient(discord.Client):
             dm = await member.create_dm()
             await dm.send(f"""Hello {member.name}! Welcome to {SERVER_NAME}
         Lets plug you into the server...!
-        Use the command  # register to begin the setup!
+        Use the command  #register to begin the setup!
         """)
-        
 
     async def on_message(self, message):
         if message.author == self.user:
