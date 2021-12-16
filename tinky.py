@@ -28,7 +28,11 @@ class MyClient(discord.Client):
 
             dm = await member.create_dm()
             await dm.send(f"""Hello {member.name}! Welcome to {SERVER_NAME}
-        Lets plug you into the server...!
+        Follow us at
+        + instagram https://www.instagram.com/tinkerhub.gcek/
+        + linkedIn https://in.linkedin.com/company/tinkerhubgcek
+
+        Meanwhile...Lets plug you into the discord server...!
         Use the command  #register to begin the setup!
         """)
 
@@ -46,7 +50,10 @@ class MyClient(discord.Client):
         reply = ""
         if content == "#register":
             if not(self.has_role('un-verified', message.author.id)):
-                reply = f"It seems you have already joined {SERVER_NAME}"
+                reply = f"""It seems you have already joined {SERVER_NAME}
+                Hmm... have you checked us on
+                + instagram https://www.instagram.com/tinkerhub.gcek/
+                + linkedIn https://in.linkedin.com/company/tinkerhubgcek"""
                 delMember(message.author.id)
 
             elif thisMember.registerStart:
@@ -92,7 +99,10 @@ class MyClient(discord.Client):
                         try:
                             await self.plugin(thisMember)
                             reply = f"""Lets rock and roll the server.
-                        See you at {SERVER_NAME}"""
+                        See you at {SERVER_NAME}
+                        Meanwhile...follow us at
+                        + instagram https://www.instagram.com/tinkerhub.gcek/
+                        + linkedIn https://in.linkedin.com/company/tinkerhubgcek """
                         except Exception as e:
                             print(e)
                             db.remove("discord_list", {'id': thisMember.id})
