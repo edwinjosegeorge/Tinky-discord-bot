@@ -4,7 +4,6 @@ from sqlalchemy.orm import sessionmaker
 from settings import DATABASE_URL
 from difflib import SequenceMatcher
 
-
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(engine)
 base = declarative_base()
@@ -34,67 +33,55 @@ class CollegeStudent(base):
 base.metadata.create_all(engine)
 
 
-def DB_find(**kwargs):
-    '''Searches the DB
-        if count(result)=1 -> return CollegeStudent
-        else return count
+def DB_find(admn: str):
     '''
-
-    for key in kwargs:
-        kwargs[key] = str(kwargs[key]).upper().strip()
+    Searches the admn in DB
+    return CollegeStudent on success, else None
+    admn is primary_key
+    '''
+    admn = admn.strip().upper()
 
     with Session() as session:
         try:
-            query = select(CollegeStudent).filter_by(**kwargs)
+            query = select(CollegeStudent).filter_by(admn=admn)
             result = session.execute(query).all()
-            count = len(result)
-            if count == 1:
+            if len(result) == 1:
                 return result[0][0]
-            return count
+            return None
         except Exception as e:
             print(e)
-            return 0
+            return None
 
 
-def DB_update(admn: str, name: str, id: str) -> bool:
-    '''
-    Modifies the 'id' field in the DB , returns true on success
-    '''
-
-    admn = admn.upper().strip()
-    name = name.upper().strip()
-    id = id.upper().strip()
-
+def DB_update_id(admn: str, id) -> bool:
+    """
+    Update id of an admn in DB
+    return True on success
+    """
+    admn = admn.strip().upper()
     with Session() as session:
         try:
-            if DB_find(id=id) != 0:
-                raise ValueError(f"ID {id} is have already registered")
-
             query = select(CollegeStudent).filter_by(admn=admn)
             result = session.execute(query).all()
             count = len(result)
-            if count != 1:
+            if count == 0:
                 raise ValueError(f"ADMN {admn} is not found")
 
             student = result[0][0]
-
-            if student.id is not None:
-                raise ValueError(
-                    f"ADMN {student.admn} have already registered")
-            if not student.nameSimilarity(name):
-                raise ValueError(
-                    f"Name {student.name} differs from name {name}")
-
             student.id = id
             session.commit()
             return True
         except Exception as e:
             print(e)
             session.rollback()
-    return False
+            return False
 
 
-def DB_add(**kwargs):
+def DB_add(**kwargs) -> bool:
+    """
+    Add new instances into DB
+    return True on sucess
+    """
     for key in kwargs:
         kwargs[key] = str(kwargs[key]).upper().strip()
 
@@ -107,21 +94,27 @@ def DB_add(**kwargs):
             # session.add_all([item1, item2, item3])
 
             session.commit()
+            return True
         except Exception as e:
             print(e)
             session.rollback()
+            return False
 
 
-def DB_remove(**kwargs):
-    for key in kwargs:
-        kwargs[key] = str(kwargs[key]).upper().strip()
-
+def DB_remove(admn: str) -> bool:
+    """
+    Remove a record from DB if found
+    return True on success
+    """
+    admn = admn.strip().upper()
     with Session() as session:
         try:
-            query = select(CollegeStudent).filter_by(**kwargs)
+            query = select(CollegeStudent).filter_by(admn=admn)
             for item in session.execute(query).all():
                 session.delete(item[0])
             session.commit()
+            return True
         except Exception as e:
             print(e)
             session.rollback()
+            return False

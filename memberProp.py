@@ -3,16 +3,20 @@ import re
 
 
 class DiscordMember:
-    def __init__(self, id):
+    def __init__(self, memObj):
         self.name = None
-        self.id = str(id)
+        self.id = str(memObj.id)
         self.gcekian = None
         self.year = None
         self.branch = None
         self.admn = None
         self.registerStart = False
+        self.memberObj = memObj
 
     def fetchNext(self) -> str:
+        """
+        Find the next field to process
+        """
         if self.registerStart is False:
             return "register"
 
@@ -37,7 +41,9 @@ class DiscordMember:
         return "complete"
 
     def addData(self, info: str) -> bool:
-        # add the information to corresponding element, return true on success
+        """
+        add the information to corresponding field, return true on success
+        """
         info = re.sub("\t", " ", info)
         info = re.sub("\n", " ", info)
         info = re.sub("  ", " ", info)
@@ -66,7 +72,6 @@ class DiscordMember:
         elif next == 'year':
             if info.startswith("20"):
                 info = "2K"+info[2:]
-
             matchObj = re.search("^2K[0-9]{2}$", info)
             if matchObj is None:
                 return False
@@ -78,6 +83,9 @@ class DiscordMember:
         return True
 
     def generateMessage(self) -> str:
+        """
+        Issue the next user prompt
+        """
         next = self.fetchNext()
         if next == "register":
             msg = f"To begin the registration into server {SERVER_NAME} "
@@ -116,15 +124,20 @@ class DiscordMember:
         return msg
 
 
-bunker = dict()  # hold incomplete details
+bunker = dict()  # cache incomplete details
 
 
-def loadMember(id) -> DiscordMember:
-    # Returns an existing or new object for DiscordMember
+def loadMember(id: str) -> DiscordMember:
+    """
+    Returns an existing or new object for DiscordMember
+    """
     bunker[str(id)] = bunker.get(str(id), DiscordMember(str(id)))
     return bunker[str(id)]
 
 
-def delMember(id) -> None:
+def delMember(id: str) -> None:
+    """
+    Clear the cache
+    """
     bunker[str(id)] = bunker.get(str(id), DiscordMember(str(id)))
     del bunker[str(id)]
