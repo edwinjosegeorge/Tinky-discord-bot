@@ -1,6 +1,7 @@
 from settings import SERVER_NAME
 import re
 
+
 class DiscordMember:
     def __init__(self, id):
         self.name = None
@@ -57,8 +58,8 @@ class DiscordMember:
             self.branch = info
 
         elif next == 'admission':
-            matchObj = re.search("^[0-9]{2}[A-Z][0-9]{3}$",info)
-            if matchObj==None:
+            matchObj = re.search("^[0-9]{2}[A-Z][0-9]{3}$", info)
+            if matchObj is None:
                 return False
             self.admn = matchObj.string
 
@@ -66,8 +67,8 @@ class DiscordMember:
             if info.startswith("20"):
                 info = "2K"+info[2:]
 
-            matchObj = re.search("^2K[0-9]{2}$",info)
-            if matchObj == None:
+            matchObj = re.search("^2K[0-9]{2}$", info)
+            if matchObj is None:
                 return False
             self.year = matchObj.string
 
@@ -117,10 +118,12 @@ class DiscordMember:
 
 bunker = dict()  # hold incomplete details
 
+
 def loadMember(id) -> DiscordMember:
     # Returns an existing or new object for DiscordMember
     bunker[str(id)] = bunker.get(str(id), DiscordMember(str(id)))
     return bunker[str(id)]
+
 
 def delMember(id) -> None:
     bunker[str(id)] = bunker.get(str(id), DiscordMember(str(id)))

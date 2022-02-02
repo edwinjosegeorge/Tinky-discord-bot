@@ -9,6 +9,7 @@ engine = create_engine(DATABASE_URL)
 Session = sessionmaker(engine)
 base = declarative_base()
 
+
 class CollegeStudent(base):
     __tablename__ = 'college'
 
@@ -19,7 +20,7 @@ class CollegeStudent(base):
     id = Column(String(20))
 
     def nameSimilarity(self, name: str) -> bool:
-        #compare name for 80% similarity
+        # compare name for 80% similarity
         seq = SequenceMatcher(None, self.name, name.strip().upper())
         return float(seq.ratio()) > 0.8
 
@@ -29,7 +30,9 @@ class CollegeStudent(base):
     def __repr__(self):
         return self.__str__()
 
+
 base.metadata.create_all(engine)
+
 
 def DB_find(**kwargs):
     '''Searches the DB
@@ -52,14 +55,15 @@ def DB_find(**kwargs):
             print(e)
             return 0
 
-def DB_update(admn: str, name: str, id: str)->bool:
+
+def DB_update(admn: str, name: str, id: str) -> bool:
     '''
     Modifies the 'id' field in the DB , returns true on success
     '''
 
-    admn=admn.upper().strip()
-    name=name.upper().strip()
-    id=id.upper().strip()
+    admn = admn.upper().strip()
+    name = name.upper().strip()
+    id = id.upper().strip()
 
     with Session() as session:
         try:
@@ -74,10 +78,12 @@ def DB_update(admn: str, name: str, id: str)->bool:
 
             student = result[0][0]
 
-            if student.id != None:
-                raise ValueError(f"ADMN {student.admn} have already registered")
+            if student.id is not None:
+                raise ValueError(
+                    f"ADMN {student.admn} have already registered")
             if not student.nameSimilarity(name):
-                raise ValueError(f"Name {student.name} differs from name {name}")
+                raise ValueError(
+                    f"Name {student.name} differs from name {name}")
 
             student.id = id
             session.commit()
@@ -86,6 +92,7 @@ def DB_update(admn: str, name: str, id: str)->bool:
             print(e)
             session.rollback()
     return False
+
 
 def DB_add(**kwargs):
     for key in kwargs:
@@ -96,13 +103,14 @@ def DB_add(**kwargs):
             item = CollegeStudent(**kwargs)
             session.add(item)
 
-            #add multiple items
-            #session.add_all([item1, item2, item3])
+            # add multiple items
+            # session.add_all([item1, item2, item3])
 
             session.commit()
         except Exception as e:
             print(e)
             session.rollback()
+
 
 def DB_remove(**kwargs):
     for key in kwargs:
