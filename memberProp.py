@@ -1,5 +1,5 @@
 from settings import SERVER_NAME
-
+import re
 
 class DiscordMember:
     def __init__(self, id):
@@ -37,63 +37,50 @@ class DiscordMember:
 
     def addData(self, info: str) -> bool:
         # add the information to corresponding element, return true on success
-
-        info = info.replace("\t", " ")
-        info = info.replace("\n", " ")
-        info = info.strip()
-        info = info.upper()
-        while "  " in info:
-            info = info.replace("  ", " ")
+        info = re.sub("\t", " ", info)
+        info = re.sub("\n", " ", info)
+        info = re.sub("  ", " ", info)
+        info = info.strip().upper()
 
         next = self.fetchNext()
 
-        if next == 'name':
-            if len(info) > 40:
-                return False
+        if next == 'name' and len(info) < 40:
             self.name = info.title()
-            return True
 
-        elif next == 'gcek':
-            if info in ["Y", "YES", "TRUE"]:
-                self.gcekian = True
-            elif info in ["N", "NO", "FALSE"]:
-                self.gcekian = False
-            else:
-                return False
-            return True
+        elif next == 'gcek' and info in ["Y", "YES", "TRUE"]:
+            self.gcekian = True
+
+        elif next == 'gcek' and info in ["N", "NO", "FALSE"]:
+            self.gcekian = False
+
+        elif next == 'branch' and info in {'CE', 'CS', 'EC', 'EE', 'ME'}:
+            self.branch = info
 
         elif next == 'admission':
-            accept = len(info) == 6
-            accept = accept and info[:2].isnumeric()
-            accept = accept and info[2].isalpha()
-            accept = accept and info[3:].isnumeric()
-            if accept:
-                self.admn = info
-            return accept
+            matchObj = re.search("^[0-9]{2}[A-Z][0-9]{3}$",info)
+            if matchObj==None:
+                return False
+            self.admn = matchObj.string
 
         elif next == 'year':
-            accept = len(info) == 4
-            accept = accept and info[2:].isnumeric()
-            if accept:
-                if info.startswith("2K") or info.startswith("20"):
-                    self.year = "2K"+info[2:]
-                else:
-                    accept = False
-            return accept
+            if info.startswith("20"):
+                info = "2K"+info[2:]
 
-        elif next == 'branch':
-            if info in {'CE', 'CS', 'EC', 'EE', 'ME'}:
-                self.branch = info
-                return True
+            matchObj = re.search("^2K[0-9]{2}$",info)
+            if matchObj == None:
+                return False
+            self.year = matchObj.string
+
+        else:
             return False
 
-        return False
+        return True
 
     def generateMessage(self) -> str:
         next = self.fetchNext()
         if next == "register":
-            msg = "To begin the registration to server "+SERVER_NAME
-            msg += ", issue the command #register"
+            msg = f"To begin the registration into server {SERVER_NAME} "
+            msg += ", issue the command #register "
 
         elif next == "name":
             msg = "Enter your official name "
@@ -118,7 +105,7 @@ class DiscordMember:
                     """
             if self.gcekian:
                 msg += f"""Admn No : {self.admn}
-                    year : {self.year}
+                    Year : {self.year}
                     Branch : {self.branch}
                     """
             msg += """
@@ -130,12 +117,10 @@ class DiscordMember:
 
 bunker = dict()  # hold incomplete details
 
-
 def loadMember(id) -> DiscordMember:
     # Returns an existing or new object for DiscordMember
     bunker[str(id)] = bunker.get(str(id), DiscordMember(str(id)))
     return bunker[str(id)]
-
 
 def delMember(id) -> None:
     bunker[str(id)] = bunker.get(str(id), DiscordMember(str(id)))
