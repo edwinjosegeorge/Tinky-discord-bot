@@ -1,1 +1,1 @@
-worker: python3 tinky.py
+worker: python3 BOT.py
