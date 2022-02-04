@@ -33,24 +33,24 @@ class CollegeStudent(base):
 base.metadata.create_all(engine)
 
 
-def DB_find(admn: str):
+def DB_find(**kwargs):
     '''
-    Searches the admn in DB
-    return CollegeStudent on success, else None
-    admn is primary_key
+    Searches the DB, returns the list of CollegeStudent objects
     '''
-    admn = admn.strip().upper()
+    for key in kwargs:
+        kwargs[key] = str(kwargs[key]).strip().upper()
 
     with Session() as session:
+        rtn_list = list()
         try:
-            query = select(CollegeStudent).filter_by(admn=admn)
+            query = select(CollegeStudent).filter_by(**kwargs)
             result = session.execute(query).all()
-            if len(result) == 1:
-                return result[0][0]
-            return None
+            for row in result:
+                rtn_list.append(row[0])
+            return rtn_list
         except Exception as e:
             print(e)
-            return None
+            return list()
 
 
 def DB_update_id(admn: str, id) -> bool:
@@ -101,15 +101,17 @@ def DB_add(**kwargs) -> bool:
             return False
 
 
-def DB_remove(admn: str) -> bool:
+def DB_remove(**kwargs) -> bool:
     """
-    Remove a record from DB if found
+    Remove record(s) from DB if found
     return True on success
     """
-    admn = admn.strip().upper()
+
+    for key in kwargs:
+        kwargs[key] = str(kwargs[key]).upper().strip()
     with Session() as session:
         try:
-            query = select(CollegeStudent).filter_by(admn=admn)
+            query = select(CollegeStudent).filter_by(**kwargs)
             for item in session.execute(query).all():
                 session.delete(item[0])
             session.commit()

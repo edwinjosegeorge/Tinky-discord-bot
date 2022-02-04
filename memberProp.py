@@ -1,143 +1,171 @@
-from settings import SERVER_NAME
 import re
+from messageBox import messageBox
+from difflib import SequenceMatcher
+from integrations import register_member, un_register_member
 
 
 class DiscordMember:
-    def __init__(self, memObj):
+    def __init__(self, memObj, ROLES):
+        self.memberObj = memObj
+        self.id = str(memObj.id).upper()
+        self.serverRoles = ROLES
+        self.registerON = False
+
         self.name = None
-        self.id = str(memObj.id)
         self.gcekian = None
+        self.admn = None
         self.year = None
         self.branch = None
-        self.admn = None
-        self.registerStart = False
-        self.memberObj = memObj
 
-    def fetchNext(self) -> str:
-        """
-        Find the next field to process
-        """
-        if self.registerStart is False:
-            return "register"
+    def register(self) -> str:
+        if self.registerON:
+            return "Complete the current registration"
+
+        # check if already registered
+        if self.serverRoles["verified"] in self.memberObj.roles:
+            return "You are already in the server!"
+        if self.serverRoles["GCEK-verified"] in self.memberObj.roles:
+            return "You are already in the server!"
+
+        self.registerON = True
+        return "Enter your official name"
+
+    def redo(self) -> str:
+        if not self.registerON:
+            return "Type #register to get started"
+        self.name = None
+        self.gcekian = None
+        self.admn = None
+        self.year = None
+        self.branch = None
+        return "Enter your official name"
+
+    async def connect(self) -> str:
+        if not self.registerON:
+            return "Type #register to get started"
+        if self.gcekian is None:
+            return "Complete the current registration"
+        if self.gcekian and self.branch is None:
+            return "Complete the current registration"
+
+        self.registerON = False
+
+        status = await register_member(Dmember=self)
+
+        if status == "success":
+            return messageBox['registrationSuccess']
+        if status == "multiple id":
+            return "It seems you are already logged in the server with some other name. Try #unregister to reset roles."
+        if status == "pre-verified":
+            return "You are already verified in the server! Try #unregister to reset roles."
+        if status == "admn not found":
+            return f"Ops!... Cannot find the admn no: {self.admn}"
+        if status == "admn pre-occupied":
+            return f"Ops!... Admn no: {self.admn} is pre-occupied"
+        if status == "wrong details":
+            return "Ops!... Entries do not match!"
+        return "Ops!... something went wrong!"
+
+    async def unregister(self):
+        status = await un_register_member(member=self.memberObj, ROLES=self.serverRoles)
+        self.registerON = False
+        if status:
+            return messageBox['unregistrationSuccess']
+        return "Ops!... something went wrong!"
+
+    def regInfo(self, info: str) -> str:
+        if not self.registerON:
+            return "Type #register to get started"
 
         if self.name is None:
-            return "name"
+            self.name = info.upper()
+            return "Are you a student at GCE Kannur? [ yes/no ]"
 
         if self.gcekian is None:
-            return "gcek"
+            info = info.upper()
+            if info in ["Y", "YES", "TRUE"]:
+                self.gcekian = True
+                return "Enter your gcek admission number (eg 16B820)"
 
-        if not self.gcekian:
-            return "complete"
+            elif info in ["N", "NO", "FALSE"]:
+                self.gcekian = False
+                msg = "This is what I received : \n"
+                msg += f"\t ID : {self.id} \n"
+                msg += f"\t Name : {self.name} \n"
+                msg += f"\t GCEK student : {self.gcekian} \n"
+                msg += "\nTo login the server, type the command #connect \n"
+                msg += "To re-enter details, type the command #redo"
+                return msg
 
-        if self.admn is None:
-            return "admission"
+            msg = "Ops! I did not understand...\n"
+            msg += "Are you a student at GCE Kannur? [ yes/no ]"
+            return msg
 
-        if self.year is None:
-            return "year"
-
-        if self.branch is None:
-            return "branch"
-
-        return "complete"
-
-    def addData(self, info: str) -> bool:
-        """
-        add the information to corresponding field, return true on success
-        """
-        info = re.sub("\t", " ", info)
-        info = re.sub("\n", " ", info)
-        info = re.sub("  ", " ", info)
-        info = info.strip().upper()
-
-        next = self.fetchNext()
-
-        if next == 'name' and len(info) < 40:
-            self.name = info.title()
-
-        elif next == 'gcek' and info in ["Y", "YES", "TRUE"]:
-            self.gcekian = True
-
-        elif next == 'gcek' and info in ["N", "NO", "FALSE"]:
-            self.gcekian = False
-
-        elif next == 'branch' and info in {'CE', 'CS', 'EC', 'EE', 'ME'}:
-            self.branch = info
-
-        elif next == 'admission':
+        if self.gcekian and self.admn is None:
+            info = info.upper()
             matchObj = re.search("^[0-9]{2}[A-Z][0-9]{3}$", info)
             if matchObj is None:
-                return False
-            self.admn = matchObj.string
+                msg = "Ops! I did not understand...\n"
+                msg += "Enter your gcek admission number (eg 16B820)"
+                return msg
 
-        elif next == 'year':
+            self.admn = matchObj.string
+            return "Enter your batch year [2K21, 2K20, 2K19 ... ]"
+
+        if not self.gcekian:
+            msg = "Ops! I did not understand... its time to plug you in...\n"
+            msg += "This is what I received : \n"
+            msg += f"\t ID : {self.id} \n"
+            msg += f"\t Name : {self.name} \n"
+            msg += f"\t GCEK student : {self.gcekian} \n"
+            msg += "\nTo login the server, type the command #connect \n"
+            msg += "To re-enter details, type the command #redo"
+            return msg
+
+        if self.year is None:
+            info = info.upper()
             if info.startswith("20"):
                 info = "2K"+info[2:]
             matchObj = re.search("^2K[0-9]{2}$", info)
+
             if matchObj is None:
-                return False
+                msg = "Ops! I did not understand...\n"
+                msg += "Enter your batch year [2K21, 2K20, 2K19 ... ]"
+                return msg
+
             self.year = matchObj.string
+            return "Enter your stream [CS, CE, EE, ME, EC]"
 
-        else:
-            return False
+        if self.branch is None:
+            info = info.upper()
+            if info not in {'CE', 'CS', 'EC', 'EE', 'ME'}:
+                msg = "Ops! I did not understand...\n"
+                msg += "Enter your stream [CS, CE, EE, ME, EC]"
+                return msg
+            self.branch = info
+            msg = "This is what I received : \n"
+            msg += f"\t ID : {self.id} \n"
+            msg += f"\t Name : {self.name} \n"
+            msg += f"\t GCEK student : {self.gcekian} \n"
+            msg += f"\t Admn No : {self.admn}\n"
+            msg += f"\t Year : {self.year}\n"
+            msg += f"\t Branch : {self.branch}\n"
+            msg += "\nTo login the server, type the command #connect \n"
+            msg += "To re-enter details, type the command #redo"
+            return msg
 
-        return True
-
-    def generateMessage(self) -> str:
-        """
-        Issue the next user prompt
-        """
-        next = self.fetchNext()
-        if next == "register":
-            msg = f"To begin the registration into server {SERVER_NAME} "
-            msg += ", issue the command #register "
-
-        elif next == "name":
-            msg = "Enter your official name "
-
-        elif next == "gcek":
-            msg = "Are you a student at GCE Kannur? [ yes/no ]"
-
-        elif next == "admission":
-            msg = "Enter your gcek admission number (eg 16B820)"
-
-        elif next == "year":
-            msg = "Enter your batch year [2K21, 2K20, 2K19 ... ]"
-
-        elif next == "branch":
-            msg = "Enter your stream [CS, CE, EE, ME, EC]"
-
-        elif next == "complete":
-            msg = f"""This is what I received :
-                    ID : {self.id}
-                    Name : {self.name}
-                    GCEK student : {self.gcekian}
-                    """
-            if self.gcekian:
-                msg += f"""Admn No : {self.admn}
-                    Year : {self.year}
-                    Branch : {self.branch}
-                    """
-            msg += """
-            To login the server, type the command #connect
-            To re-enter details, type the command #redo"""
-
+        msg = "Ops! I did not understand... its time to plug you in...\n"
+        msg += "This is what I received : \n"
+        msg += f"\t ID : {self.id} \n"
+        msg += f"\t Name : {self.name} \n"
+        msg += f"\t GCEK student : {self.gcekian} \n"
+        msg += f"\t Admn No : {self.admn}\n"
+        msg += f"\t Year : {self.year}\n"
+        msg += f"\t Branch : {self.branch}\n"
+        msg += "\nTo login the server, type the command #connect \n"
+        msg += "To re-enter details, type the command #redo"
         return msg
 
-
-bunker = dict()  # cache incomplete details
-
-
-def loadMember(id: str) -> DiscordMember:
-    """
-    Returns an existing or new object for DiscordMember
-    """
-    bunker[str(id)] = bunker.get(str(id), DiscordMember(str(id)))
-    return bunker[str(id)]
-
-
-def delMember(id: str) -> None:
-    """
-    Clear the cache
-    """
-    bunker[str(id)] = bunker.get(str(id), DiscordMember(str(id)))
-    del bunker[str(id)]
+    def nameSimilarity(self, newName):
+        r = float(SequenceMatcher(None, self.name, newName).ratio())
+        return r > 0.8
