@@ -43,11 +43,11 @@ This custom discord-python bot assigns roles to members joined at discord server
 
 5. Updating the code
 
-   i. Update and suite the DataBase interactions at [`PSQL_hooks.py`](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/PSQL_hooks.py).
-   ii. Update and suite Bot interactions at [BOT.py](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/BOT.py).
-   iii. Update and suite the registration interaction with discord member at [memberProp.py](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/memberProp.py).
-   iV. Update display messages at [messageBox.py](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/messageBox.py). Messages during registration process are save in [memberProp.py](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/memberProp.py).
-   v. Update the discord-to-database interactions (the core rules) at [integrations.py](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/integrations.py)
+   * Update and suite the DataBase interactions at [PSQL_hooks.py](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/PSQL_hooks.py). Details how to interface database.
+   * Update and suite Bot interactions at [BOT.py](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/BOT.py). Details when, where and how the bot should be triggered.
+   * Update and suite the registration interaction with discord member at [memberProp.py](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/memberProp.py).
+   * Update display messages at [messageBox.py](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/messageBox.py). Messages during registration process are save in [memberProp.py](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/memberProp.py).
+   * Update the discord-to-database interactions (the core rules) at [integrations.py](https://github.com/edwinjosegeorge/Tinky-discord-bot/blob/main/integrations.py). Details how and what to update to meet constraints.
 
 6. Run you bot
    ```bash
