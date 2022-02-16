@@ -26,8 +26,8 @@ async def on_ready():
     # dispatching process
     parent = os.getpid()
     print("Tinky running at PID : ", parent)
-    sleep(60)
     if os.fork() == 0:  # new child process
+        sleep(20)
         child = os.getpid()
         print("Instagram running at PID : ", child)
         while psutil.pid_exists(parent):
@@ -42,7 +42,7 @@ async def on_ready():
             ROLES[role_name] = discord.utils.get(SERVER.roles, name=role_name)
 
         await integrity_checks(SERVER, client.user, ROLES)
-        await notify_un_verified(SERVER, client.user, ROLES['un-verified'])
+        # await notify_un_verified(SERVER, client.user, ROLES['un-verified'])
     except Exception as e:
         print("Integrity check failed : ", e)
 
