@@ -1,3 +1,5 @@
 discord/*
 .env
 *.pyc
+dbBackup.sql
+TEST_settings.py
