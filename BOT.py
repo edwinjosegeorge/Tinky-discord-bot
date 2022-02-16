@@ -27,7 +27,7 @@ async def on_ready():
         for role_name in ['un-verified', 'verified', 'GCEK-verified']:
             ROLES[role_name] = discord.utils.get(SERVER.roles, name=role_name)
 
-        await integrity_checks(SERVER, client.user, ROLES)
+        # await integrity_checks(SERVER, client.user, ROLES)
         # await notify_un_verified(SERVER, client.user, ROLES['un-verified'])
     except Exception as e:
         print("Integrity check failed : ", e)
