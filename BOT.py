@@ -23,11 +23,19 @@ async def on_ready():
     SERVER = discord.utils.get(client.guilds, id=SERVER_ID)
     print(f'{client.user} is connected to {SERVER.name}')
 
+    try:
+        for role_name in ['un-verified', 'verified', 'GCEK-verified']:
+            ROLES[role_name] = discord.utils.get(SERVER.roles, name=role_name)
+
+        await integrity_checks(SERVER, client.user, ROLES)
+        # await notify_un_verified(SERVER, client.user, ROLES['un-verified'])
+    except Exception as e:
+        print("Integrity check failed : ", e)
+
     # dispatching process
     parent = os.getpid()
     print("Tinky running at PID : ", parent)
     if os.fork() == 0:  # new child process
-        sleep(20)
         child = os.getpid()
         print("Instagram running at PID : ", child)
         while psutil.pid_exists(parent):
@@ -38,14 +46,6 @@ async def on_ready():
         exit()
 
     # parent process continues from here
-    try:
-        for role_name in ['un-verified', 'verified', 'GCEK-verified']:
-            ROLES[role_name] = discord.utils.get(SERVER.roles, name=role_name)
-
-        await integrity_checks(SERVER, client.user, ROLES)
-        # await notify_un_verified(SERVER, client.user, ROLES['un-verified'])
-    except Exception as e:
-        print("Integrity check failed : ", e)
 
 
 @client.event
