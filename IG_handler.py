@@ -1,7 +1,7 @@
 import requests
 import discord
 from settings import SOCIAL_POST_CHANNEL
-from INSTA_PSQL_hooks import DB_find, DB_find_all, DB_update_id
+from SOCIAL_PSQL_hooks import DB_find, DB_find_all, DB_update_id
 
 
 def extract_info(ig_username):
