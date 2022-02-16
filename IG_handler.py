@@ -1,15 +1,12 @@
 import requests
 import discord
-
-data_bunker = dict()
-target_ig = {'tinkerhub', 'tinkerhub.gcek', 'robocek', "robocek_official"}
+from settings import SOCIAL_POST_CHANNEL
+from INSTA_PSQL_hooks import DB_find, DB_find_all, DB_update_id
 
 
 def extract_info(ig_username):
-    global data_bunker
-    if ig_username not in data_bunker:
-        data_bunker[ig_username] = ""
 
+    data = dict()
     try:
         json_url = f"https://www.instagram.com/{ig_username}/feed/?__a=1"
         headers = {"Content-Type": "text"}
@@ -17,18 +14,18 @@ def extract_info(ig_username):
         user = html.json()['graphql']['user']
         post_edges = user['edge_owner_to_timeline_media']['edges']
 
-        data = dict()
         data['full_name'] = user['full_name']
         data['profile_pic_url'] = user['profile_pic_url']
         data['insta_url'] = f"https://www.instagram.com/{user['username']}/"
         data['post'] = dict()
 
-        recent_post = data_bunker[ig_username]
+        recent_post = DB_find(ig_username)
+        update_post = False
         for post in post_edges:
             if post['node']['id'] == recent_post:
                 break
-            if recent_post == data_bunker[ig_username]:
-                data_bunker[ig_username] = post['node']['id']
+            if not update_post:
+                update_post = DB_update_id(ig_username, post['node']['id'])
 
             post_data = dict()
             post_data['id'] = post['node']['id']
@@ -40,7 +37,7 @@ def extract_info(ig_username):
         return data
     except Exception as e:
         print(f"Exception at IG_handler.extract_info({ig_username}) : ", e)
-        return dict()
+        return data
 
 
 def ig_embed_obj(ig_username):
@@ -75,20 +72,9 @@ def ig_embed_obj(ig_username):
         return (False, None)
 
 
-async def push_ig_embed(CLIENT, CHANNEL_ID):
-    channel = CLIENT.get_channel(int(CHANNEL_ID))
-    for ig_username in target_ig:
+async def push_ig_embed(CLIENT):
+    channel = CLIENT.get_channel(int(SOCIAL_POST_CHANNEL))
+    for ig_username in DB_find_all():
         new_post, embed_obj = ig_embed_obj(ig_username)
         if new_post:
             await channel.send(embed=embed_obj)
-
-    for ig_username in target_ig:
-        new_post, embed_obj = ig_embed_obj(ig_username)
-        if new_post:
-            await channel.send(embed=embed_obj)
-
-    for ig_username in target_ig:
-        new_post, embed_obj = ig_embed_obj(ig_username)
-        if new_post:
-            await channel.send(embed=embed_obj)
-    print(data_bunker)
