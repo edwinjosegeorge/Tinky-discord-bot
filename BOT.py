@@ -26,6 +26,7 @@ async def on_ready():
     # dispatching process
     parent = os.getpid()
     print("Tinky running at PID : ", parent)
+    sleep(60)
     if os.fork() == 0:  # new child process
         child = os.getpid()
         print("Instagram running at PID : ", child)
