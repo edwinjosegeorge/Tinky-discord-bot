@@ -79,6 +79,7 @@ async def push_ig_embed(CLIENT):
         for ig_username in DB_find_all():
             new_post, embed_obj = ig_embed_obj(ig_username)
             if new_post:
+                print("IG embed send...")
                 await channel.send(embed=embed_obj)
     except Exception as e:
         print("Exception at IG_handler.push_ig_embed : ", e)
