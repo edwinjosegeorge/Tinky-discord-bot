@@ -32,6 +32,7 @@ async def on_ready():
         print("Instagram running at PID : ", child)
         while psutil.pid_exists(parent):
             await push_ig_embed(client)
+            print("Instagram PID going for a sleep...")
             sleep(3600)  # sleep for 1 hour
         print("Parent process was killed. Killing child process now...")
         exit()
