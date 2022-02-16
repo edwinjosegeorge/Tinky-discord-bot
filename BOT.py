@@ -1,7 +1,11 @@
 import re
 import discord
+import os
+import psutil
+from time import sleep
 from messageBox import messageBox
 from memberProp import DiscordMember
+from IG_handler import push_ig_embed
 from settings import BOT_TOKEN, SERVER_ID
 from integrations import integrity_checks, notify_un_verified, un_register_member
 
@@ -17,13 +21,29 @@ bunker = dict()  # cache discord incomplete details
 async def on_ready():
     global SERVER, ROLES
     SERVER = discord.utils.get(client.guilds, id=SERVER_ID)
-    for role_name in ['un-verified', 'verified', 'GCEK-verified']:
-        ROLES[role_name] = discord.utils.get(SERVER.roles, name=role_name)
-
     print(f'{client.user} is connected to {SERVER.name}')
 
-    await integrity_checks(SERVER, client.user, ROLES)
-    await notify_un_verified(SERVER, client.user, ROLES['un-verified'])
+    # dispatching process
+    parent = os.getpid()
+    print("Tinky running at PID : ", parent)
+    if os.fork() == 0:  # new child process
+        child = os.getpid()
+        print("Instagram running at PID : ", child)
+        while psutil.pid_exists(parent):
+            await push_ig_embed(client)
+            sleep(10)  # sleep for 1 hour
+        print("Parent process was killed. Killing child process now...")
+        exit()
+
+    # parent process continues from here
+    try:
+        for role_name in ['un-verified', 'verified', 'GCEK-verified']:
+            ROLES[role_name] = discord.utils.get(SERVER.roles, name=role_name)
+
+        await integrity_checks(SERVER, client.user, ROLES)
+        await notify_un_verified(SERVER, client.user, ROLES['un-verified'])
+    except Exception as e:
+        print("Integrity check failed : ", e)
 
 
 @client.event

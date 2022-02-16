@@ -73,8 +73,12 @@ def ig_embed_obj(ig_username):
 
 
 async def push_ig_embed(CLIENT):
-    channel = CLIENT.get_channel(int(SOCIAL_POST_CHANNEL))
-    for ig_username in DB_find_all():
-        new_post, embed_obj = ig_embed_obj(ig_username)
-        if new_post:
-            await channel.send(embed=embed_obj)
+    try:
+        print("Checking for instagram updates")
+        channel = CLIENT.get_channel(int(SOCIAL_POST_CHANNEL))
+        for ig_username in DB_find_all():
+            new_post, embed_obj = ig_embed_obj(ig_username)
+            if new_post:
+                await channel.send(embed=embed_obj)
+    except Exception as e:
+        print("Exception at IG_handler.push_ig_embed : ", e)
