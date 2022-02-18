@@ -1,4 +1,5 @@
 import requests
+import asyncio
 import discord
 from settings import SOCIAL_POST_CHANNEL
 from SOCIAL_PSQL_hooks import DB_find, DB_find_all, DB_update_id
@@ -73,13 +74,16 @@ def ig_embed_obj(ig_username):
 
 
 async def push_ig_embed(CLIENT):
-    try:
-        print("Checking for instagram updates")
-        channel = CLIENT.get_channel(int(SOCIAL_POST_CHANNEL))
-        for ig_username in DB_find_all():
-            new_post, embed_obj = ig_embed_obj(ig_username)
-            if new_post:
-                print("IG embed send...")
-                await channel.send(embed=embed_obj)
-    except Exception as e:
-        print("Exception at IG_handler.push_ig_embed : ", e)
+    while(True):
+        try:
+            print("Checking for instagram updates")
+            channel = CLIENT.get_channel(int(SOCIAL_POST_CHANNEL))
+            for ig_username in DB_find_all():
+                new_post, embed_obj = ig_embed_obj(ig_username)
+                if new_post:
+                    print("IG embed send...")
+                    await channel.send(embed=embed_obj)
+        except Exception as e:
+            print("Exception at IG_handler.push_ig_embed : ", e)
+        print("Instagram search.. sleeping...")
+        await asyncio.sleep(10)

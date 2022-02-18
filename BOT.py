@@ -1,8 +1,6 @@
 import re
 import discord
-import os
-import psutil
-from time import sleep
+import asyncio
 from messageBox import messageBox
 from memberProp import DiscordMember
 from IG_handler import push_ig_embed
@@ -32,20 +30,8 @@ async def on_ready():
     except Exception as e:
         print("Integrity check failed : ", e)
 
-    # dispatching process
-    parent = os.getpid()
-    print("Tinky running at PID : ", parent)
-    if os.fork() == 0:  # new child process
-        child = os.getpid()
-        print("Instagram running at PID : ", child)
-        while psutil.pid_exists(parent):
-            await push_ig_embed(client)
-            print("Instagram PID going for a sleep...")
-            sleep(3600)  # sleep for 1 hour
-        print("Parent process was killed. Killing child process now...")
-        exit()
-
-    # parent process continues from here
+    # dispatching new task
+    asyncio.ensure_future(push_ig_embed(client))
 
 
 @client.event
