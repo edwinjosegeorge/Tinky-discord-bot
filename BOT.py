@@ -1,10 +1,10 @@
 import re
 import discord
-import asyncio
 from messageBox import messageBox
 from memberProp import DiscordMember
-from IG_handler import push_ig_embed
 from settings import BOT_TOKEN, SERVER_ID
+from asyncio import ensure_future as fire_and_forget
+from instagram import push_notification_loop as IG_loop
 from integrations import integrity_checks, notify_un_verified, un_register_member
 
 
@@ -31,7 +31,7 @@ async def on_ready():
         print("Integrity check failed : ", e)
 
     # dispatching new task
-    asyncio.ensure_future(push_ig_embed(client))
+    fire_and_forget(IG_loop(client, 3600))
 
 
 @client.event
