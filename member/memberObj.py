@@ -1,5 +1,5 @@
 import re
-from messageBox import messageBox
+from member.messageBox import messageBox
 from member.support import register_member, un_register_member
 
 

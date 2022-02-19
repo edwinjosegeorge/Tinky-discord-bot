@@ -25,19 +25,3 @@ Meanwhile...follow us at
   :link: linkedIn (https://in.linkedin.com/company/tinkerhubgcek)
   :link: gitHub (https://github.com/TinkerHub-GCEK)
 """
-messageBox['registrationSuccess'] = """
-Lets rock and roll the server :champagne_glass: :balloon:
-Introduce yourself to your peers at the intro channel :partying_face:
-Meanwhile...follow us at
-  :link: instagram (https://www.instagram.com/tinkerhub.gcek)
-  :link: linkedIn (https://in.linkedin.com/company/tinkerhubgcek)
-  :link: gitHub (https://github.com/TinkerHub-GCEK)
-"""
-
-messageBox['unregistrationSuccess'] = """
-Your roles have beem removed. Type #register to get active again :partying_face:
-Meanwhile...follow us at
-  :link: instagram (https://www.instagram.com/tinkerhub.gcek)
-  :link: linkedIn (https://in.linkedin.com/company/tinkerhubgcek)
-  :link: gitHub (https://github.com/TinkerHub-GCEK)
-"""

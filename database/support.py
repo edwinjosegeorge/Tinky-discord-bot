@@ -4,7 +4,7 @@ from database.hooks import DB_find, DB_update
 
 async def integrity_checks(SERVER, USER, ROLES: dict) -> None:
     """
-    Resolves Server and DB integrity. Ensures the roles are corretly matched
+    Resolves Server and DB integrity. Ensures the roles are correctly matched
     """
     print("DB integrity checks started...")
 
@@ -12,30 +12,32 @@ async def integrity_checks(SERVER, USER, ROLES: dict) -> None:
 
     # fetch DB records
     for obj in DB_find(CollegeStudent):
-        if obj.id == "":
-            continue
-        gcek_verified[obj.id] = obj
+        if obj.id != "":
+            gcek_verified[obj.id] = obj
 
     for member in SERVER.members:
         if member.id in {USER.id}:
             continue
         try:
             id = str(member.id).strip().upper()
-            nickname = member.display_name
+            nickname = member.display_name.stip()
             if ROLES['GCEK-verified'] in member.roles and id in gcek_verified:
-                if nickname != gcek_verified[id].nickname:
-                    await member.edit(nick=gcek_verified[id].nickname)
+                if nickname != gcek_verified[id].nickname():
+                    await member.edit(nick=gcek_verified[id].nickname())
                 await member.remove_roles(ROLES["verified"])
                 await member.remove_roles(ROLES["un-verified"])
                 del gcek_verified[id]
 
             elif ROLES['verified'] in member.roles:
                 if "🎓" not in nickname:
-                    await member.edit(nick=nickname.strip()+" 🎓")
+                    await member.edit(nick=nickname+" 🎓")
                 await member.remove_roles(ROLES["GCEK-verified"])
                 await member.remove_roles(ROLES["un-verified"])
 
             else:
+                if "🎓" in nickname:
+                    new_name = f"{member.name}#{member.discriminator}"
+                    await member.edit(nick=new_name)
                 await member.remove_roles(ROLES["GCEK-verified"])
                 await member.remove_roles(ROLES["verified"])
                 await member.add_roles(ROLES['un-verified'])

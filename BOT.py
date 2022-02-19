@@ -1,11 +1,15 @@
 import re
 import discord
 from messageBox import messageBox
-from memberProp import DiscordMember
 from settings import BOT_TOKEN, SERVER_ID
+
+from member.memberObj import DiscordMember
+
+from database.tables import initialize as DB_init
+from database.support import integrity_checks
+
 from asyncio import ensure_future as fire_and_forget
 from instagram import push_notification_loop as IG_loop
-from integrations import integrity_checks, notify_un_verified, un_register_member
 
 
 intents = discord.Intents.all()
@@ -18,17 +22,28 @@ bunker = dict()  # cache discord incomplete details
 @client.event
 async def on_ready():
     global SERVER, ROLES
+    DB_init()
     SERVER = discord.utils.get(client.guilds, id=SERVER_ID)
     print(f'{client.user} is connected to {SERVER.name}')
+    for role_name in ['un-verified', 'verified', 'GCEK-verified']:
+        ROLES[role_name] = discord.utils.get(SERVER.roles, name=role_name)
 
-    try:
-        for role_name in ['un-verified', 'verified', 'GCEK-verified']:
-            ROLES[role_name] = discord.utils.get(SERVER.roles, name=role_name)
+    await integrity_checks(SERVER, client.user, ROLES)
 
-        # await integrity_checks(SERVER, client.user, ROLES)
-        # await notify_un_verified(SERVER, client.user, ROLES['un-verified'])
-    except Exception as e:
-        print("Integrity check failed : ", e)
+    print("Notifying un-verified members")
+    for member in SERVER.members:
+        if member.id in {client.user.id}:
+            continue
+        if ROLES['un-verified'] not in member.roles:
+            continue
+        try:
+            dm = await member.create_dm()
+            msg = messageBox['greet and register'] % (member.name,
+                                                      client.user.name,
+                                                      SERVER.name)
+            await dm.send(msg.strip())
+        except Exception as e:
+            print(f"Exception while notifying {member.display_name} : ", e)
 
     # dispatching new task
     fire_and_forget(IG_loop(client, 3600))
@@ -40,8 +55,9 @@ async def on_member_join(member):
     await member.add_roles(ROLES["un-verified"])
     dm = await member.create_dm()
     customMsg = messageBox['greet and register'] % (member.name,
-                                                    client.user,
+                                                    client.user.name,
                                                     SERVER.name)
+    print("customMsg")
     await dm.send(customMsg.strip())
 
 
@@ -52,7 +68,8 @@ async def on_member_remove(member):
         await member.guild.fetch_ban(member)
         return
     except discord.NotFound:
-        await un_register_member(member, ROLES)
+        Dmember = DiscordMember(member, ROLES)
+        await Dmember.unregister()
 
 
 @client.event
@@ -69,10 +86,11 @@ async def on_message(message):
     content.strip()
 
     id = str(message.author.id)
-    for member in SERVER.members:
-        if str(member.id) == id:
-            bunker[id] = bunker.get(id, DiscordMember(member, ROLES))
-            break
+    if id not in bunker:
+        for member in SERVER.members:
+            if str(member.id) == id:
+                bunker[id] = DiscordMember(member, ROLES)
+                break
     Dmember = bunker[id]
     reply = ""
 

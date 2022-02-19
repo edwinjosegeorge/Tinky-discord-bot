@@ -2,15 +2,6 @@ from database.tables import CollegeStudent
 from database.hooks import DB_find, DB_update
 
 
-async def push_msg_for_role(MEMBER, ROLE, MSG: str) -> None:
-    """
-    Push direct message to a member with specific role
-    """
-    if ROLE in MEMBER.roles:
-        dm = await MEMBER.create_dm()
-        await dm.send(MSG.strip())
-
-
 async def register_member(Dmember) -> str:
     """
     registers the member by checking rules
@@ -19,14 +10,14 @@ async def register_member(Dmember) -> str:
     try:
         ROLES = Dmember.serverRoles
         member = Dmember.memberObj
-        new_id = str(member.id)
+        newId = str(member.id)
 
         if ROLES['verified'] in member.roles:
             return "pre-verified"
         if ROLES['GCEK-verified'] in member.roles:
             return "pre-verified"
 
-        DB_record = DB_find(CollegeStudent, id=new_id)
+        DB_record = DB_find(CollegeStudent, id=newId)
         if len(DB_record) != 0:
             return "multiple id"
 
@@ -48,7 +39,7 @@ async def register_member(Dmember) -> str:
             return "wrong details"
         if Dmember.year != DB_record[0].year:
             return "wrong details"
-        if not DB_update(CollegeStudent, {'admn': Dmember.admn}, {'id': new_id}):
+        if not DB_update(CollegeStudent, {'admn': Dmember.admn}, {'id': newId}):
             return "error"
 
         # update gcekian member roles:
@@ -61,7 +52,7 @@ async def register_member(Dmember) -> str:
         return 'error'
 
 
-async def un_register_member(member, ROLES) -> bool:
+async def un_register_member(member, ROLES: dict) -> bool:
     """
     remove member id from DB
     return True on success
