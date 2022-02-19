@@ -58,6 +58,8 @@ class DiscordMember:
 
         self.registerON = False
         status = await register_member(Dmember=self)
+        if status in {'admn not found', 'admn pre-occupied'}:
+            return messageBox[status] % (self.admn)
         if status in messageBox:
             return messageBox[status]
         return messageBox['error']
@@ -132,16 +134,13 @@ class DiscordMember:
                 msg += "Enter your stream [CS, CE, EE, ME, EC]"
                 return msg
             self.branch = info
-            msg = messageBox['GCEK-confirmatInfo'] % (self.id, self.name,
-                                                      self.gcekian, self.admn,
-                                                      self.year, self.branch)
+            msg = messageBox['GCEK-confirmInfo'] % (self.id, self.name,
+                                                    self.gcekian, self.admn,
+                                                    self.year, self.branch)
             return msg
 
         msg = "Ops! I did not understand... its time to plug you in...\n"
-        msg += messageBox['GCEK-confirmatInfo'] % (self.id, self.name,
-                                                   self.gcekian, self.admn,
-                                                   self.year, self.branch)
-        return msg
-        return msg
-        return msg
+        msg += messageBox['GCEK-confirmInfo'] % (self.id, self.name,
+                                                 self.gcekian, self.admn,
+                                                 self.year, self.branch)
         return msg

@@ -31,7 +31,7 @@ async def register_member(Dmember) -> str:
         DB_record = DB_find(CollegeStudent, admn=Dmember.admn)
         if len(DB_record) == 0:
             return "admn not found"
-        if DB_record[0].id is not None:
+        if DB_record[0].id != "":
             return "admn pre-occupied"
         if not DB_record[0].nameSimilarity(Dmember.name.upper()):
             return "wrong details"
@@ -39,7 +39,11 @@ async def register_member(Dmember) -> str:
             return "wrong details"
         if Dmember.year != DB_record[0].year:
             return "wrong details"
-        if not DB_update(CollegeStudent, {'admn': Dmember.admn}, {'id': newId}):
+
+        update_success = DB_update(CollegeStudent,
+                                   {'admn': Dmember.admn},
+                                   {'id': newId})
+        if not update_success:
             return "error"
 
         # update gcekian member roles:
@@ -70,4 +74,5 @@ async def un_register_member(member, ROLES: dict) -> bool:
         return True
     except Exception as e:
         print("Exception at member.support.un_register_member ", e)
+        print("\t(Ignore this exception if member left the server)")
         return False

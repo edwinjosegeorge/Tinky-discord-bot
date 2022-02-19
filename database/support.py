@@ -20,7 +20,7 @@ async def integrity_checks(SERVER, USER, ROLES: dict) -> None:
             continue
         try:
             id = str(member.id).strip().upper()
-            nickname = member.display_name.stip()
+            nickname = member.display_name.strip()
             if ROLES['GCEK-verified'] in member.roles and id in gcek_verified:
                 if nickname != gcek_verified[id].nickname():
                     await member.edit(nick=gcek_verified[id].nickname())
@@ -42,7 +42,7 @@ async def integrity_checks(SERVER, USER, ROLES: dict) -> None:
                 await member.remove_roles(ROLES["verified"])
                 await member.add_roles(ROLES['un-verified'])
         except Exception as e:
-            print("Exception at integrations.integrity_checks :", e)
+            print("Exception at database.support.integrity_checks :", e)
             print(f"Skipping member {member.display_name} from checks...")
             id = str(member.id).strip().upper()
             if id in gcek_verified:
