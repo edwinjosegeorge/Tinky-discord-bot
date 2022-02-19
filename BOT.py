@@ -28,6 +28,8 @@ async def on_ready():
     for role_name in ['un-verified', 'verified', 'GCEK-verified']:
         ROLES[role_name] = discord.utils.get(SERVER.roles, name=role_name)
 
+    # it is a lo0oong operation. execute only if restarting after a long time
+    '''
     await integrity_checks(SERVER, client.user, ROLES)
 
     print("Notifying un-verified members")
@@ -44,7 +46,7 @@ async def on_ready():
             await dm.send(msg.strip())
         except Exception as e:
             print(f"Exception while notifying {member.display_name} : ", e)
-
+    '''
     # dispatching new task
     fire_and_forget(IG_loop(client, 3600))
 
