@@ -1,50 +1,63 @@
-from sqlalchemy import select
 from messageBox import messageBox
-from PSQL_hooks import Session, CollegeStudent, DB_find, DB_update_id
+from database.tables import CollegeStudent
+from database.hooks import DB_find, DB_update
 
 
-async def integrity_checks(SERVER, USER, ROLES):
+async def integrity_checks(SERVER, USER, ROLES: dict) -> None:
+    """
+    Resolves Server and DB integrity. Ensures the roles are corretly matched
+    """
+    print("DB integrity checks started...")
 
-    discord_gcek_verified = dict()
-    # fixing roles
+    gcek_verified = dict()
+
+    # fetch DB records
+    for obj in DB_find(CollegeStudent):
+        if obj.id == "":
+            continue
+        gcek_verified[obj.id] = obj
+
     for member in SERVER.members:
         if member.id in {USER.id}:
             continue
+        try:
+            id = str(member.id).strip().upper()
+            nickname = member.display_name
+            if ROLES['GCEK-verified'] in member.roles and id in gcek_verified:
+                if nickname != gcek_verified[id].nickname:
+                    await member.edit(nick=gcek_verified[id].nickname)
+                await member.remove_roles(ROLES["verified"])
+                await member.remove_roles(ROLES["un-verified"])
+                del gcek_verified[id]
 
-        if ROLES['GCEK-verified'] in member.roles:
-            id = str(member.id).upper().strip()
-            discord_gcek_verified[id] = member
-            await member.remove_roles(ROLES["verified"])
-            await member.remove_roles(ROLES["un-verified"])
+            elif ROLES['verified'] in member.roles:
+                if "🎓" not in nickname:
+                    await member.edit(nick=nickname.strip()+" 🎓")
+                await member.remove_roles(ROLES["GCEK-verified"])
+                await member.remove_roles(ROLES["un-verified"])
 
-        elif ROLES['verified'] in member.roles:
-            await member.remove_roles(ROLES["GCEK-verified"])
-            await member.remove_roles(ROLES["un-verified"])
+            else:
+                await member.remove_roles(ROLES["GCEK-verified"])
+                await member.remove_roles(ROLES["verified"])
+                await member.add_roles(ROLES['un-verified'])
+        except Exception as e:
+            print("Exception at integrations.integrity_checks :", e)
+            print(f"Skipping member {member.display_name} from checks...")
+            id = str(member.id).strip().upper()
+            if id in gcek_verified:
+                del gcek_verified[id]
 
-        else:
-            await member.add_roles(ROLES['un-verified'])
+    for id in gcek_verified:
+        obj = gcek_verified[id]
+        DB_update(CollegeStudent, {'admn': obj.admn}, {'id': ""})
 
-    with Session() as session:
-        # fixing db-discord integrity
-        query = select(CollegeStudent).filter(CollegeStudent.id is not None)
-        db_reg = session.execute(query).all()
-        for row in db_reg:
-            record = row[0]
-            memID = record.id
-            if memID not in discord_gcek_verified:
-                record.id = None
-                continue
-            del discord_gcek_verified[memID]
-        session.commit()
-
-        for memID in discord_gcek_verified:
-            member = discord_gcek_verified[memID]
-            await member.remove_roles(ROLES['GCEK-verified'])
-            await member.add_roles(ROLES['verified'])
+    print("DB integrity checks ended...")
 
 
-async def notify_un_verified(SERVER, USER, ROLE):
-    # send message to all unverified
+async def notify_un_verified(SERVER, USER, ROLE) -> None:
+    """
+    Broadcast message to all un-verified
+    """
     for member in SERVER.members:
         if member.id in {USER.id}:
             continue
@@ -60,6 +73,7 @@ async def notify_un_verified(SERVER, USER, ROLE):
 async def register_member(Dmember) -> str:
     """
     registers the member by checking rules
+    returns various status
     """
     ROLES = Dmember.serverRoles
     member = Dmember.memberObj
@@ -70,7 +84,7 @@ async def register_member(Dmember) -> str:
     if ROLES['GCEK-verified'] in member.roles:
         return "pre-verified"
 
-    DB_pre_records = DB_find(id=new_id)
+    DB_pre_records = DB_find(CollegeStudent, id=new_id)
     if len(DB_pre_records) != 0:
         return "multiple id"
 
@@ -81,7 +95,7 @@ async def register_member(Dmember) -> str:
         return 'success'
 
     # ADD member id in DB
-    DB_pre_records = DB_find(admn=Dmember.admn)
+    DB_pre_records = DB_find(CollegeStudent, admn=Dmember.admn)
     if len(DB_pre_records) == 0:
         return "admn not found"
     if DB_pre_records[0].id is not None:
@@ -92,14 +106,14 @@ async def register_member(Dmember) -> str:
         return "wrong details"
     if Dmember.year != DB_pre_records[0].year:
         return "wrong details"
-    if not DB_update_id(admn=Dmember.admn, id=Dmember.id):
+    if not DB_update(CollegeStudent, {'admn': Dmember.admn}, {'id': Dmember.id}):
         return "update error"
 
     # update gcekian member roles:
     await member.remove_roles(ROLES['un-verified'])
     await member.add_roles(ROLES['GCEK-verified'])
-    new_name = (DB_pre_records[0].name).title()
-    await member.edit(nick=(new_name+" 🎓"))
+    new_name = DB_pre_records[0].nickname()
+    await member.edit(nick=new_name)
     return "success"
 
 
@@ -109,9 +123,9 @@ async def un_register_member(member, ROLES) -> bool:
     return True on success
     """
     try:
-        records = DB_find(id=str(member.id))
+        records = DB_find(CollegeStudent, id=str(member.id))
         for clgStuObj in records:
-            DB_update_id(admn=clgStuObj.admn, id=None)
+            DB_update(CollegeStudent, {'admn': clgStuObj.admn}, {'id': ""})
 
         # update member roles:
         await member.add_roles(ROLES['un-verified'])

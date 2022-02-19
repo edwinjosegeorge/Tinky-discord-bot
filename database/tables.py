@@ -13,12 +13,15 @@ class CollegeStudent(base):
     admn = Column(String(6), primary_key=True, nullable=False)
     branch = Column(String(2), nullable=False)
     year = Column(String(4), nullable=False)
-    id = Column(String(20))
+    id = Column(String(20), nullable=False, default="", server_default="")
 
     def nameSimilarity(self, name: str) -> bool:
         # compare name for 80% similarity
         seq = SequenceMatcher(None, self.name, name.strip().upper())
         return float(seq.ratio()) > 0.8
+
+    def nickname(self) -> str:
+        return self.name.title()+" 🎓"
 
 
 class Instagram(base):
